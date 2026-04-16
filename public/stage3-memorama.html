@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Memorama - Kyndryl Rally</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/memorama.css">
+</head>
+<body>
+  <div class="container wide">
+    <a href="/passport.html" class="back-link">← Volver al Pasaporte</a>
+
+    <div class="card">
+      <div class="card-header">
+        <img src="/kyndryl/kyndryl-logo.png" alt="Kyndryl" class="logo">
+        <h2>Memorama de Asociación</h2>
+        <p>Encuentra las parejas: logo ↔ concepto</p>
+      </div>
+
+      <!-- Contact form for unregistered users -->
+      <div id="contactForm" class="hidden">
+        <div class="card-header">
+          <h2>Regístrate primero</h2>
+          <p>Necesitamos tus datos para participar</p>
+        </div>
+        <form id="memoRegistrationForm">
+          <div class="form-group">
+            <label for="memoNombre">Nombre completo *</label>
+            <input type="text" id="memoNombre" placeholder="Tu nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="memoEmpresa">Empresa *</label>
+            <input type="text" id="memoEmpresa" placeholder="Tu empresa" required>
+          </div>
+          <div class="form-group">
+            <label for="memoPuesto">Puesto</label>
+            <input type="text" id="memoPuesto" placeholder="Tu puesto">
+          </div>
+          <div class="form-group">
+            <label for="memoTelefono">Teléfono</label>
+            <input type="tel" id="memoTelefono" placeholder="10 dígitos">
+          </div>
+          <div class="form-group">
+            <label for="memoCiudad">Ciudad</label>
+            <input type="text" id="memoCiudad" placeholder="Tu ciudad">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Registrarme y Jugar</button>
+        </form>
+      </div>
+
+      <!-- Game section -->
+      <div id="gameSection">
+        <div class="game-header">
+          <p class="pairs-found">Parejas encontradas: <strong><span id="pairsFound">0</span>/<span id="totalPairs">10</span></strong></p>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+      </div>
+
+      <!-- Completion -->
+      <div class="game-complete" id="gameComplete">
+        <div class="trophy">🏆</div>
+        <h2>¡Memorama Completado!</h2>
+        <p>Has encontrado todas las parejas. ¡Sello obtenido!</p>
+        <a href="/passport.html" class="btn btn-primary btn-lg">Volver al Pasaporte</a>
+      </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Procesando...</p>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Memorama Game Engine
+
+    // Card pairs data (logo ↔ concept)
+    // Images use placeholder paths - replace with actual partner logos
+    const PAIRS = [
+      {
+        id: 1,
+        logo: { image: '/kyndryl/kyndryl-logo.png', label: 'Kyndryl' },
+        concept: 'El Marco de IA Agéntica de Kyndryl'
+      },
+      {
+        id: 2,
+        logo: { image: '/img/partners/google.png', label: 'Google Cloud' },
+        concept: 'Partner de Infraestructura Cloud'
+      },
+      {
+        id: 3,
+        logo: { image: '/img/partners/microsoft.png', label: 'Microsoft' },
+        concept: 'Soluciones de Productividad y Azure'
+      },
+      {
+        id: 4,
+        logo: { image: '/img/partners/aws.png', label: 'AWS' },
+        concept: 'Servicios de Nube Escalables'
+      },
+      {
+        id: 5,
+        logo: { image: '/img/partners/vmware.png', label: 'VMware' },
+        concept: 'Virtualización y Multi-Cloud'
+      },
+      {
+        id: 6,
+        logo: { image: '/img/partners/cisco.png', label: 'Cisco' },
+        concept: 'Redes y Ciberseguridad'
+      },
+      {
+        id: 7,
+        logo: { image: '/img/partners/paloalto.png', label: 'Palo Alto' },
+        concept: 'Seguridad de Red Avanzada'
+      },
+      {
+        id: 8,
+        logo: { image: '/img/partners/redhat.png', label: 'Red Hat' },
+        concept: 'Plataforma Open Source Enterprise'
+      },
+      {
+        id: 9,
+        logo: { image: '/img/partners/sap.png', label: 'SAP' },
+        concept: 'Gestión Empresarial Inteligente'
+      },
+      {
+        id: 10,
+        logo: { image: '/img/partners/ibm.png', label: 'IBM' },
+        concept: 'Innovación en IA y Datos'
+      }
+    ];
+
+    let uuid = getParticipantUuid();
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let isLocked = false;
+    const totalPairs = PAIRS.length;
+
+    // Check registration
+    if (!uuid) {
+      document.getElementById('contactForm').classList.remove('hidden');
+      document.getElementById('gameSection').classList.add('hidden');
+
+      document.getElementById('memoRegistrationForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nombre = document.getElementById('memoNombre').value.trim();
+        const empresa = document.getElementById('memoEmpresa').value.trim();
+        if (!nombre || !empresa) {
+          showToast('Nombre y empresa son requeridos', 'error');
+          return;
+        }
+        showLoading('Registrando...');
+        try {
+          const data = await apiCall('/api/participants/register', {
+            method: 'POST',
+            body: JSON.stringify({
+              nombre,
+              empresa,
+              puesto: document.getElementById('memoPuesto').value.trim(),
+              telefono: document.getElementById('memoTelefono').value.trim(),
+              ciudad: document.getElementById('memoCiudad').value.trim()
+            })
+          });
+          setParticipantUuid(data.uuid);
+          setParticipantName(nombre);
+          uuid = data.uuid;
+          document.getElementById('contactForm').classList.add('hidden');
+          document.getElementById('gameSection').classList.remove('hidden');
+          hideLoading();
+          initGame();
+        } catch (error) {
+          hideLoading();
+          showToast(error.message || 'Error al registrar', 'error');
+        }
+      });
+    } else {
+      initGame();
+    }
+
+    function initGame() {
+      document.getElementById('totalPairs').textContent = totalPairs;
+      document.getElementById('pairsFound').textContent = '0';
+
+      // Create cards array (each pair creates 2 cards)
+      const cards = [];
+      PAIRS.forEach(pair => {
+        cards.push({
+          pairId: pair.id,
+          type: 'logo',
+          image: pair.logo.image,
+          label: pair.logo.label
+        });
+        cards.push({
+          pairId: pair.id,
+          type: 'concept',
+          text: pair.concept
+        });
+      });
+
+      // Shuffle
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+
+      // Render board
+      const board = document.getElementById('gameBoard');
+      board.innerHTML = '';
+
+      cards.forEach((card, index) => {
+        const el = document.createElement('div');
+        el.className = 'memo-card';
+        el.dataset.pairId = card.pairId;
+        el.dataset.type = card.type;
+        el.dataset.index = index;
+
+        let frontContent = '';
+        if (card.type === 'logo') {
+          frontContent = `
+            <div class="card-front logo-card">
+              <img src="${card.image}" alt="${card.label}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'concept-text\\'>${card.label}</div>'">
+              <div class="card-label">${card.label}</div>
+            </div>`;
+        } else {
+          frontContent = `
+            <div class="card-front concept-card">
+              <div class="concept-text">${card.text}</div>
+            </div>`;
+        }
+
+        el.innerHTML = `
+          <div class="card-back"></div>
+          ${frontContent}
+        `;
+
+        el.addEventListener('click', () => flipCard(el));
+        board.appendChild(el);
+      });
+    }
+
+    function flipCard(card) {
+      if (isLocked) return;
+      if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+      if (flippedCards.length >= 2) return;
+
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        isLocked = true;
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      const pairId1 = card1.dataset.pairId;
+      const pairId2 = card2.dataset.pairId;
+      const type1 = card1.dataset.type;
+      const type2 = card2.dataset.type;
+
+      // Match if same pairId but different types (logo ↔ concept)
+      if (pairId1 === pairId2 && type1 !== type2) {
+        // Match!
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedPairs++;
+        document.getElementById('pairsFound').textContent = matchedPairs;
+
+        flippedCards = [];
+        isLocked = false;
+
+        if (matchedPairs === totalPairs) {
+          setTimeout(completeGame, 600);
+        }
+      } else {
+        // No match - flip back
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          flippedCards = [];
+          isLocked = false;
+        }, 800);
+      }
+    }
+
+    async function completeGame() {
+      // Mark stage 3 as complete
+      try {
+        await apiCall('/api/stages/complete', {
+          method: 'POST',
+          body: JSON.stringify({
+            participantUuid: uuid,
+            stageNumber: 3
+          })
+        });
+      } catch (error) {
+        console.error('Error completing stage:', error);
+      }
+
+      // Show completion
+      document.getElementById('gameSection').style.display = 'none';
+      document.getElementById('gameComplete').classList.add('active');
+      showToast('¡Etapa 3 completada! Sello obtenido', 'success');
+    }
+  </script>
+</body>
+</html>

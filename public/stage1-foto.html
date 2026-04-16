@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tu Constelación - Kyndryl Rally</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/foto.css">
+</head>
+<body>
+  <div class="container">
+    <a href="/passport.html" class="back-link">← Volver al Pasaporte</a>
+
+    <div class="card" id="fotoCard">
+      <div class="card-header">
+        <img src="/kyndryl/kyndryl-logo.png" alt="Kyndryl" class="logo">
+        <h2>Tu Constelación</h2>
+        <p>Descubre tu signo zodiacal y genera tu foto estelar</p>
+      </div>
+
+      <!-- Birth Date Section -->
+      <div class="zodiac-section" id="zodiacSection">
+        <div class="form-group">
+          <label for="birthDate">Fecha de nacimiento</label>
+          <input type="date" id="birthDate" class="birth-date-input" required>
+        </div>
+        <div class="zodiac-result" id="zodiacResult"></div>
+      </div>
+
+      <!-- Camera / Upload Section -->
+      <div class="camera-section" id="cameraSection">
+        <button class="camera-btn" id="openCameraBtn">
+          Tomar Foto
+        </button>
+        <div class="upload-area" id="uploadArea">
+          <p>O arrastra una imagen aquí / haz clic para subir</p>
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-container" id="previewContainer">
+        <img id="previewImage" src="" alt="Vista previa">
+        <button class="remove-btn" id="removeBtn">×</button>
+      </div>
+
+      <!-- Generate -->
+      <div class="generate-section">
+        <button class="btn btn-primary btn-full btn-lg" id="generateBtn" disabled>
+          Generar Mi Constelación
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div class="result-section" id="resultSection">
+        <h3 class="result-title">Tu imagen estelar está lista</h3>
+        <img id="resultImage" class="result-image" src="" alt="Resultado">
+
+        <div class="qr-display" id="qrDisplay">
+          <p style="font-weight: 600;">Escanea para descargar</p>
+          <img id="downloadQr" src="" alt="QR Descarga" style="width: 150px; height: 150px;">
+        </div>
+
+        <div class="linkedin-reminder">
+          <strong>Comparte en LinkedIn</strong>
+          Descarga tu imagen y publícala en LinkedIn para obtener tu sello
+        </div>
+
+        <div class="result-actions">
+          <button class="btn btn-secondary btn-sm" id="downloadBtn">
+            Descargar
+          </button>
+          <a href="/passport.html" class="btn btn-success btn-sm">
+            Volver al Pasaporte
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div class="camera-modal" id="cameraModal">
+      <video id="cameraVideo" autoplay playsinline></video>
+      <canvas id="cameraCanvas"></canvas>
+      <div class="camera-controls">
+        <button class="close-camera-btn" id="closeCameraBtn">Cancelar</button>
+        <button class="capture-btn" id="captureBtn"></button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Alineando las estrellas...</p>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Require registration
+    if (!requireRegistration()) throw new Error('Not registered');
+
+    const uuid = getParticipantUuid();
+    const userName = getParticipantName();
+
+    let capturedFile = null;
+    let cameraStream = null;
+    let currentZodiac = null;
+
+    // Zodiac signs data
+    const ZODIAC_SIGNS = [
+      { name: 'Capricornio', symbol: '♑', constellation: 'Capricornus', element: 'Tierra', startMonth: 12, startDay: 22, endMonth: 1, endDay: 19 },
+      { name: 'Acuario',     symbol: '♒', constellation: 'Aquarius',    element: 'Aire',   startMonth: 1,  startDay: 20, endMonth: 2, endDay: 18 },
+      { name: 'Piscis',      symbol: '♓', constellation: 'Pisces',      element: 'Agua',   startMonth: 2,  startDay: 19, endMonth: 3, endDay: 20 },
+      { name: 'Aries',       symbol: '♈', constellation: 'Aries',       element: 'Fuego',  startMonth: 3,  startDay: 21, endMonth: 4, endDay: 19 },
+      { name: 'Tauro',       symbol: '♉', constellation: 'Taurus',      element: 'Tierra', startMonth: 4,  startDay: 20, endMonth: 5, endDay: 20 },
+      { name: 'Géminis',     symbol: '♊', constellation: 'Gemini',      element: 'Aire',   startMonth: 5,  startDay: 21, endMonth: 6, endDay: 20 },
+      { name: 'Cáncer',      symbol: '♋', constellation: 'Cancer',      element: 'Agua',   startMonth: 6,  startDay: 21, endMonth: 7, endDay: 22 },
+      { name: 'Leo',         symbol: '♌', constellation: 'Leo',         element: 'Fuego',  startMonth: 7,  startDay: 23, endMonth: 8, endDay: 22 },
+      { name: 'Virgo',       symbol: '♍', constellation: 'Virgo',       element: 'Tierra', startMonth: 8,  startDay: 23, endMonth: 9, endDay: 22 },
+      { name: 'Libra',       symbol: '♎', constellation: 'Libra',       element: 'Aire',   startMonth: 9,  startDay: 23, endMonth: 10, endDay: 22 },
+      { name: 'Escorpio',    symbol: '♏', constellation: 'Scorpius',    element: 'Agua',   startMonth: 10, startDay: 23, endMonth: 11, endDay: 21 },
+      { name: 'Sagitario',   symbol: '♐', constellation: 'Sagittarius', element: 'Fuego',  startMonth: 11, startDay: 22, endMonth: 12, endDay: 21 },
+    ];
+
+    function getZodiacSign(month, day) {
+      for (const sign of ZODIAC_SIGNS) {
+        if (sign.startMonth === sign.endMonth) continue; // skip edge case
+        if (sign.startMonth > sign.endMonth) {
+          // Wraps around year (Capricorn: Dec 22 - Jan 19)
+          if ((month === sign.startMonth && day >= sign.startDay) ||
+              (month === sign.endMonth && day <= sign.endDay)) {
+            return sign;
+          }
+        } else {
+          if ((month === sign.startMonth && day >= sign.startDay) ||
+              (month === sign.endMonth && day <= sign.endDay)) {
+            return sign;
+          }
+        }
+      }
+      return ZODIAC_SIGNS[0]; // fallback
+    }
+
+    // Birth date handler
+    function updateZodiac(dateValue) {
+      const date = new Date(dateValue + 'T12:00:00');
+      if (isNaN(date.getTime())) return;
+
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      currentZodiac = getZodiacSign(month, day);
+
+      const resultDiv = document.getElementById('zodiacResult');
+      resultDiv.innerHTML = `
+        <div class="zodiac-card">
+          <span class="zodiac-symbol">${currentZodiac.symbol}</span>
+          <div class="zodiac-info">
+            <strong>${currentZodiac.name}</strong>
+            <span>Elemento: ${currentZodiac.element}</span>
+            <span>Constelación: ${currentZodiac.constellation}</span>
+          </div>
+        </div>
+      `;
+      resultDiv.classList.add('active');
+      checkCanGenerate();
+    }
+
+    document.getElementById('birthDate').addEventListener('change', (e) => {
+      updateZodiac(e.target.value);
+    });
+
+    // Auto-load birth date from registration
+    const savedBirthDate = localStorage.getItem('participantBirthDate');
+    if (savedBirthDate) {
+      document.getElementById('birthDate').value = savedBirthDate;
+      updateZodiac(savedBirthDate);
+    }
+
+    // Build prompt with zodiac theme
+    function buildPrompt() {
+      const name = userName || 'Participante';
+      const sign = currentZodiac;
+
+      return `Crea un retrato artístico y elegante de la persona de la foto con temática de constelaciones y astrología. El fondo debe ser un cielo nocturno profundo con la constelación de ${sign.constellation} (${sign.name}) dibujada con líneas brillantes conectando estrellas doradas y plateadas. El símbolo zodiacal ${sign.symbol} de ${sign.name} debe aparecer de forma elegante integrado en la composición, brillando en tonos dorados. La paleta de colores debe ser predominantemente azul oscuro profundo con detalles en dorado y plata, creando un efecto lujoso y celestial. La persona debe verse iluminada por una luz suave dorada/plateada como si las estrellas la iluminaran. Alrededor de la persona, partículas brillantes doradas y plateadas flotando como polvo de estrellas. En la parte superior de la imagen escribe el nombre "${name}" en tipografía elegante dorada. Estilo fotorrealista, profesional y mágico. NO incluir ningún logo de marca.`;
+    }
+
+    // Camera
+    document.getElementById('openCameraBtn').addEventListener('click', async () => {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        document.getElementById('cameraVideo').srcObject = cameraStream;
+        document.getElementById('cameraModal').classList.add('active');
+      } catch (err) {
+        showToast('No se pudo acceder a la cámara', 'error');
+      }
+    });
+
+    document.getElementById('captureBtn').addEventListener('click', () => {
+      const video = document.getElementById('cameraVideo');
+      const canvas = document.getElementById('cameraCanvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+
+      canvas.toBlob(blob => {
+        capturedFile = new File([blob], 'capture.png', { type: 'image/png' });
+        document.getElementById('previewImage').src = URL.createObjectURL(blob);
+        document.getElementById('previewContainer').classList.add('active');
+        document.getElementById('cameraSection').style.display = 'none';
+        checkCanGenerate();
+        closeCamera();
+      }, 'image/png');
+    });
+
+    document.getElementById('closeCameraBtn').addEventListener('click', closeCamera);
+
+    function closeCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      document.getElementById('cameraModal').classList.remove('active');
+    }
+
+    // File upload
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    uploadArea.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'var(--gold)';
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.style.borderColor = 'var(--gray-light)';
+    });
+
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'var(--gray-light)';
+      if (e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        handleFile(fileInput.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        showToast('Solo se permiten imágenes JPG, PNG o WEBP', 'error');
+        return;
+      }
+      capturedFile = file;
+      document.getElementById('previewImage').src = URL.createObjectURL(file);
+      document.getElementById('previewContainer').classList.add('active');
+      document.getElementById('cameraSection').style.display = 'none';
+      checkCanGenerate();
+    }
+
+    // Remove preview
+    document.getElementById('removeBtn').addEventListener('click', () => {
+      capturedFile = null;
+      document.getElementById('previewContainer').classList.remove('active');
+      document.getElementById('cameraSection').style.display = 'block';
+      checkCanGenerate();
+    });
+
+    function checkCanGenerate() {
+      document.getElementById('generateBtn').disabled = !(capturedFile && currentZodiac);
+    }
+
+    // Generate
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      if (!capturedFile || !currentZodiac) return;
+
+      showLoading('Alineando las estrellas...');
+
+      const formData = new FormData();
+      formData.append('image', capturedFile);
+      formData.append('prompt', buildPrompt());
+      formData.append('participantUuid', uuid);
+      formData.append('plecaVersion', 'constelacion');
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || 'Error generando imagen');
+
+        // Show result
+        document.getElementById('resultImage').src = data.image;
+        if (data.qrCode) {
+          document.getElementById('downloadQr').src = data.qrCode;
+        }
+        document.getElementById('resultSection').classList.add('active');
+
+        // Hide form elements
+        document.getElementById('cameraSection').style.display = 'none';
+        document.getElementById('previewContainer').classList.remove('active');
+        document.querySelector('.generate-section').style.display = 'none';
+        document.getElementById('zodiacSection').style.display = 'none';
+
+        // Store download URL for download button
+        document.getElementById('downloadBtn').dataset.url = data.downloadUrl;
+        document.getElementById('downloadBtn').dataset.image = data.image;
+
+        hideLoading();
+        showToast('¡Tu constelación ha sido revelada!', 'success');
+      } catch (error) {
+        hideLoading();
+        showToast(error.message || 'Error al generar imagen', 'error');
+      }
+    });
+
+    // Download
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const imageData = document.getElementById('downloadBtn').dataset.image;
+      if (!imageData) return;
+
+      const signName = currentZodiac ? currentZodiac.name : 'constelacion';
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-MX').replace(/\//g, '-');
+      const filename = `Constelacion_${signName}_${userName || 'foto'}_${dateStr}.png`;
+
+      const link = document.createElement('a');
+      link.href = imageData;
+      link.download = filename;
+      link.click();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+/* Admin Panel Styles */
+.admin-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.login-card {
+  max-width: 400px;
+  margin: 100px auto;
+}
+
+/* Tabs */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--gray-light);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.admin-tab {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--gray);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.admin-tab.active {
+  background: white;
+  color: var(--kyndryl-blue);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Tab content */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Scanner */
+.scanner-area {
+  text-align: center;
+  margin: 20px 0;
+}
+
+#qr-reader {
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.manual-input {
+  margin: 16px 0;
+  display: flex;
+  gap: 8px;
+}
+
+.manual-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.manual-input input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Participant result */
+.participant-result {
+  display: none;
+  background: #f8f9fa;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.participant-result.active {
+  display: block;
+  animation: fadeInUp 0.3s ease;
+}
+
+.participant-result .info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.participant-result .info-row:last-child {
+  border-bottom: none;
+}
+
+.participant-result .info-row .label {
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.participant-result .info-row .value {
+  color: var(--dark);
+  font-weight: 600;
+}
+
+/* Stage buttons in admin */
+.stage-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.stage-btn {
+  padding: 10px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  color: var(--dark);
+}
+
+.stage-btn:hover {
+  border-color: var(--primary);
+  background: #fff5f0;
+}
+
+.stage-btn.completed {
+  border-color: var(--success);
+  background: #f0fdf4;
+  color: var(--success);
+  cursor: default;
+}
+
+.stage-btn.completed::after {
+  content: ' ✓';
+}
+
+/* Participants table */
+.participants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+
+.participants-table th {
+  background: var(--kyndryl-blue);
+  color: white;
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.participants-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.participants-table tr:hover td {
+  background: #f8f9fa;
+}
+
+.search-bar {
+  margin-bottom: 12px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  color: var(--gray);
+  margin-top: 4px;
+}
+
+/* Voucher verification */
+.voucher-result {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+}
+
+.voucher-result.active {
+  display: block;
+  animation: fadeInUp 0.3s ease;
+}
+
+.voucher-result.valid {
+  background: #f0fdf4;
+  border: 2px solid var(--success);
+}
+
+.voucher-result.invalid {
+  background: #fef2f2;
+  border: 2px solid var(--danger);
+}
+
+.voucher-result.redeemed {
+  background: #fef3c7;
+  border: 2px solid var(--warning);
+}
+
+/* Table responsive */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .admin-tab {
+    flex: none;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

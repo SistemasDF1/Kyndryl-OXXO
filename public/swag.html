@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Swag - Kyndryl Rally</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/swag.css">
+</head>
+<body>
+  <div class="container">
+    <a href="/passport.html" class="back-link">← Volver al Pasaporte</a>
+
+    <!-- Not Eligible -->
+    <div class="card hidden" id="notEligible">
+      <div class="not-eligible">
+        <div class="lock-icon">🔒</div>
+        <h2>Aún no puedes canjear</h2>
+        <p id="eligibilityMsg">Necesitas completar las 5 etapas del rally para acceder al catálogo de swags.</p>
+        <a href="/passport.html" class="btn btn-primary">Ver mi Pasaporte</a>
+      </div>
+    </div>
+
+    <!-- Catalog -->
+    <div class="card hidden" id="catalogSection">
+      <div class="card-header">
+        <img src="/kyndryl/kyndryl-logo.png" alt="Kyndryl" class="logo">
+        <h2>🎉 ¡Felicidades!</h2>
+        <p>Completaste el rally. Elige tu premio:</p>
+      </div>
+
+      <div class="swag-grid" id="swagGrid"></div>
+
+      <div style="text-align: center;">
+        <button class="btn btn-primary btn-lg btn-full" id="redeemBtn" disabled>
+          Canjear Premio
+        </button>
+      </div>
+    </div>
+
+    <!-- Voucher Result -->
+    <div class="card hidden" id="voucherSection">
+      <div class="voucher-display active">
+        <h2 style="color: var(--success);">✓ Premio Canjeado</h2>
+
+        <div class="voucher-card">
+          <h3>Tu Voucher</h3>
+          <div class="voucher-code" id="voucherCodeDisplay">---</div>
+          <div class="voucher-item" id="voucherItemDisplay">---</div>
+          <img id="voucherQr" src="" alt="QR Voucher">
+        </div>
+
+        <p class="voucher-instructions">
+          Muestra este voucher al staff en la mesa de canje para recibir tu premio.
+        </p>
+
+        <a href="/passport.html" class="btn btn-secondary">Volver al Pasaporte</a>
+      </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Procesando...</p>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireRegistration()) throw new Error('Not registered');
+
+    const uuid = getParticipantUuid();
+    let selectedSwag = null;
+    let catalog = [];
+
+    const SWAG_ICONS = {
+      'tshirt': '👕',
+      'bottle': '🍶',
+      'backpack': '🎒',
+      'cap': '🧢'
+    };
+
+    // Check eligibility and load
+    init();
+
+    async function init() {
+      try {
+        // Check passport status
+        const passport = await apiCall(`/api/participants/${uuid}/passport`);
+
+        // If already has voucher, show it
+        if (passport.vouchers && passport.vouchers.length > 0) {
+          const v = passport.vouchers[0];
+          showVoucher(v.voucher_code, v.swag_item);
+          return;
+        }
+
+        if (!passport.canRedeemSwag) {
+          document.getElementById('notEligible').classList.remove('hidden');
+          document.getElementById('eligibilityMsg').textContent =
+            `Llevas ${passport.completedCount}/5 etapas. Completa todas para canjear tu swag.`;
+          return;
+        }
+
+        // Load catalog
+        const catalogData = await apiCall('/api/swag/catalog');
+        catalog = catalogData.catalog;
+        renderCatalog();
+        document.getElementById('catalogSection').classList.remove('hidden');
+      } catch (error) {
+        showToast('Error cargando datos', 'error');
+      }
+    }
+
+    function renderCatalog() {
+      const grid = document.getElementById('swagGrid');
+      grid.innerHTML = catalog.map(item => `
+        <div class="swag-item" data-id="${item.id}" onclick="selectSwag('${item.id}')">
+          <div class="swag-icon">${SWAG_ICONS[item.id] || '🎁'}</div>
+          <h4>${item.name}</h4>
+          <p>${item.description}</p>
+        </div>
+      `).join('');
+    }
+
+    function selectSwag(id) {
+      selectedSwag = id;
+      document.querySelectorAll('.swag-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.id === id);
+      });
+      document.getElementById('redeemBtn').disabled = false;
+    }
+
+    document.getElementById('redeemBtn').addEventListener('click', async () => {
+      if (!selectedSwag) return;
+
+      showLoading('Generando voucher...');
+
+      try {
+        const data = await apiCall('/api/swag/redeem', {
+          method: 'POST',
+          body: JSON.stringify({
+            participantUuid: uuid,
+            swagItem: selectedSwag
+          })
+        });
+
+        hideLoading();
+        showVoucher(data.voucherCode, data.swagItem, data.qrCode);
+        showToast('¡Premio canjeado!', 'success');
+      } catch (error) {
+        hideLoading();
+        showToast(error.message || 'Error canjeando swag', 'error');
+      }
+    });
+
+    async function showVoucher(code, item, qrCode) {
+      document.getElementById('catalogSection').classList.add('hidden');
+      document.getElementById('notEligible').classList.add('hidden');
+      document.getElementById('voucherSection').classList.remove('hidden');
+
+      document.getElementById('voucherCodeDisplay').textContent = code;
+      document.getElementById('voucherItemDisplay').textContent = item;
+
+      if (qrCode) {
+        document.getElementById('voucherQr').src = qrCode;
+      } else {
+        // Generate QR client-side if not provided
+        try {
+          // Fetch QR from a simple endpoint or hide QR
+          document.getElementById('voucherQr').style.display = 'none';
+        } catch {}
+      }
+    }
+  </script>
+</body>
+</html>

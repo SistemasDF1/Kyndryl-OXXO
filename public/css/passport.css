@@ -1,0 +1,294 @@
+/* Passport Digital Styles */
+.passport-header {
+  text-align: center;
+  padding: 20px 0 16px;
+}
+
+.passport-header .logo {
+  height: 56px;
+  margin-bottom: 8px;
+}
+
+.passport-header h1 {
+  font-size: 1.3rem;
+  color: var(--kyndryl-blue);
+  margin-bottom: 2px;
+}
+
+.passport-header .participant-name {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.passport-header .participant-empresa {
+  color: var(--gray);
+  font-size: 0.85rem;
+}
+
+/* Progress section */
+.progress-section {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.progress-section .progress-text {
+  font-size: 0.85rem;
+  color: var(--gray);
+  margin-bottom: 8px;
+}
+
+.progress-section .progress-text strong {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+/* Stages grid */
+.stages-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.stage-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 2px solid var(--gray-light);
+  background: #fafbfc;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-card.completed {
+  border-color: var(--success);
+  background: #f0fdf4;
+}
+
+.stage-card .stage-number {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  background: var(--gray-light);
+  transition: var(--transition);
+}
+
+.stage-card.completed .stage-number {
+  background: var(--success);
+}
+
+.stage-card .stage-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stage-card .stage-info h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 2px;
+}
+
+.stage-card .stage-info p {
+  font-size: 0.75rem;
+  color: var(--gray);
+  line-height: 1.3;
+}
+
+.stage-card .stage-action {
+  flex-shrink: 0;
+}
+
+.stage-card .stamp {
+  display: none;
+  width: 50px;
+  height: 50px;
+}
+
+.stage-card.completed .stamp {
+  display: block;
+  animation: stampIn 0.5s ease;
+}
+
+.stage-card .stamp-placeholder {
+  width: 50px;
+  height: 50px;
+  border: 2px dashed var(--gray-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 1.2rem;
+}
+
+.stage-card.completed .stamp-placeholder {
+  display: none;
+}
+
+.stage-card .go-btn {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  border-radius: 20px;
+}
+
+.stage-card .qr-hint {
+  font-size: 0.7rem;
+  color: var(--secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
+.stage-card.completed .go-btn,
+.stage-card.completed .qr-hint {
+  display: none;
+}
+
+/* My QR button */
+.my-qr-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.my-qr-btn {
+  background: linear-gradient(135deg, var(--kyndryl-blue) 0%, #1a3a5c 100%);
+  color: white;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-qr-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 43, 70, 0.4);
+}
+
+/* QR Modal */
+.qr-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.qr-modal.active {
+  display: flex;
+}
+
+.qr-modal-content {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  text-align: center;
+  max-width: 350px;
+  width: 100%;
+  animation: fadeInUp 0.3s ease;
+}
+
+.qr-modal-content img {
+  width: 220px;
+  height: 220px;
+  margin: 16px 0;
+}
+
+.qr-modal-content h3 {
+  color: var(--kyndryl-blue);
+  margin-bottom: 4px;
+}
+
+.qr-modal-content p {
+  color: var(--gray);
+  font-size: 0.85rem;
+}
+
+.qr-modal-content .close-modal {
+  margin-top: 16px;
+  background: var(--gray-light);
+  color: var(--dark);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Swag CTA */
+.swag-cta {
+  display: none;
+  text-align: center;
+  margin: 16px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: var(--radius);
+  animation: pulse 2s infinite;
+}
+
+.swag-cta.visible {
+  display: block;
+}
+
+.swag-cta h3 {
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.swag-cta p {
+  color: var(--gray);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+/* Completed stamp icons (CSS-based) */
+.stamp-check {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  animation: stampIn 0.5s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+@media (max-width: 480px) {
+  .stage-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .stage-card .stage-number {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+  .stage-card .stage-info h3 {
+    font-size: 0.85rem;
+  }
+}

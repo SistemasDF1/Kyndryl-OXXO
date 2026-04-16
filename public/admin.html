@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Kyndryl Rally</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <!-- Login -->
+  <div id="loginSection">
+    <div class="admin-container">
+      <div class="card login-card">
+        <div class="card-header">
+          <img src="/kyndryl/kyndryl-logo.png" alt="Kyndryl" class="logo">
+          <h2>Panel de Staff</h2>
+          <p>Ingresa tus credenciales</p>
+        </div>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="username">Usuario</label>
+            <input type="text" id="username" placeholder="Usuario" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" placeholder="Contraseña" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Ingresar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="hidden">
+    <div class="admin-container">
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <img src="/kyndryl/kyndryl-logo.png" alt="Kyndryl" class="logo" style="height: 30px;">
+            <span style="font-weight: 600; color: var(--kyndryl-blue); margin-left: 8px;">Staff Panel</span>
+          </div>
+          <button class="btn btn-sm btn-outline" id="logoutBtn">Cerrar sesión</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('scanner')">Escáner QR</button>
+          <button class="admin-tab" onclick="switchTab('participants')">Participantes</button>
+          <button class="admin-tab" onclick="switchTab('stats')">Estadísticas</button>
+          <button class="admin-tab" onclick="switchTab('vouchers')">Vouchers</button>
+        </div>
+
+        <!-- Scanner Tab -->
+        <div class="tab-content active" id="tab-scanner">
+          <h3 style="margin-bottom: 12px;">Escanear QR de Participante</h3>
+
+          <div class="scanner-area">
+            <div id="qr-reader"></div>
+            <button class="btn btn-secondary btn-sm" id="startScanBtn" style="margin-top: 12px;">
+              Iniciar Escáner
+            </button>
+          </div>
+
+          <div class="manual-input">
+            <input type="text" id="manualUuid" placeholder="O ingresa UUID manualmente">
+            <button class="btn btn-primary btn-sm" id="manualSearchBtn">Buscar</button>
+          </div>
+
+          <!-- Participant Result -->
+          <div class="participant-result" id="scanResult">
+            <h3 style="margin-bottom: 12px; color: var(--kyndryl-blue);" id="resultName">---</h3>
+            <div class="info-row"><span class="label">Empresa</span><span class="value" id="resultEmpresa">---</span></div>
+            <div class="info-row"><span class="label">Puesto</span><span class="value" id="resultPuesto">---</span></div>
+            <div class="info-row"><span class="label">Teléfono</span><span class="value" id="resultTelefono">---</span></div>
+            <div class="info-row"><span class="label">Ciudad</span><span class="value" id="resultCiudad">---</span></div>
+            <div class="info-row"><span class="label">Progreso</span><span class="value" id="resultProgress">---</span></div>
+
+            <h4 style="margin: 16px 0 8px; color: var(--dark);">Marcar etapa como completada:</h4>
+            <div class="stage-buttons" id="stageButtons">
+              <button class="stage-btn" data-stage="2" onclick="completeStage(2)">2. Ventas</button>
+              <button class="stage-btn" data-stage="4" onclick="completeStage(4)">4. Conferencia</button>
+              <button class="stage-btn" data-stage="5" onclick="completeStage(5)">5. Partner</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Participants Tab -->
+        <div class="tab-content" id="tab-participants">
+          <h3 style="margin-bottom: 12px;">Participantes Registrados</h3>
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre o empresa..." oninput="filterParticipants()">
+          </div>
+          <div class="table-wrapper">
+            <table class="participants-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Empresa</th>
+                  <th>Ciudad</th>
+                  <th>Progreso</th>
+                  <th>Registro</th>
+                </tr>
+              </thead>
+              <tbody id="participantsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div class="tab-content" id="tab-stats">
+          <h3 style="margin-bottom: 12px;">Estadísticas del Evento</h3>
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-value" id="statTotal">0</div>
+              <div class="stat-label">Registrados</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statCompleted">0</div>
+              <div class="stat-label">Rally Completo</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statVouchers">0</div>
+              <div class="stat-label">Vouchers</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statRedeemed">0</div>
+              <div class="stat-label">Canjeados</div>
+            </div>
+          </div>
+          <h4 style="margin: 16px 0 8px;">Completitud por Etapa</h4>
+          <div id="stageStats"></div>
+        </div>
+
+        <!-- Vouchers Tab -->
+        <div class="tab-content" id="tab-vouchers">
+          <h3 style="margin-bottom: 12px;">Verificar Voucher</h3>
+          <div class="manual-input">
+            <input type="text" id="voucherCode" placeholder="Código del voucher">
+            <button class="btn btn-primary btn-sm" id="verifyVoucherBtn">Verificar</button>
+          </div>
+          <div class="voucher-result" id="voucherResult">
+            <div id="voucherResultContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Procesando...</p>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let currentParticipantUuid = null;
+    let currentStages = {};
+    let html5QrCode = null;
+    let allParticipants = [];
+
+    // Check session on load
+    checkSession();
+
+    async function checkSession() {
+      try {
+        await apiCall('/api/admin/session');
+        showAdminPanel();
+      } catch {
+        showLogin();
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('adminPanel').classList.add('hidden');
+    }
+
+    function showAdminPanel() {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+      loadParticipants();
+      loadStats();
+    }
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await apiCall('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+          })
+        });
+        showAdminPanel();
+        showToast('Login exitoso', 'success');
+      } catch (error) {
+        showToast(error.message || 'Credenciales inválidas', 'error');
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await apiCall('/api/admin/logout', { method: 'POST' });
+      showLogin();
+    });
+
+    // Tabs
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      event.target.classList.add('active');
+
+      if (tabName === 'participants') loadParticipants();
+      if (tabName === 'stats') loadStats();
+    }
+
+    // QR Scanner
+    document.getElementById('startScanBtn').addEventListener('click', () => {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode = null;
+          document.getElementById('startScanBtn').textContent = 'Iniciar Escáner';
+        });
+        return;
+      }
+
+      html5QrCode = new Html5Qrcode('qr-reader');
+      html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          // Extract UUID from URL or use as-is
+          let extractedUuid = decodedText;
+          try {
+            const url = new URL(decodedText);
+            extractedUuid = url.searchParams.get('id') || decodedText;
+          } catch {}
+
+          html5QrCode.stop().then(() => {
+            html5QrCode = null;
+            document.getElementById('startScanBtn').textContent = 'Iniciar Escáner';
+          });
+
+          lookupParticipant(extractedUuid);
+        }
+      ).then(() => {
+        document.getElementById('startScanBtn').textContent = 'Detener Escáner';
+      }).catch(err => {
+        showToast('No se pudo iniciar la cámara', 'error');
+      });
+    });
+
+    // Manual search
+    document.getElementById('manualSearchBtn').addEventListener('click', () => {
+      const uuid = document.getElementById('manualUuid').value.trim();
+      if (uuid) lookupParticipant(uuid);
+    });
+
+    async function lookupParticipant(uuid) {
+      try {
+        const data = await apiCall('/api/admin/scan', {
+          method: 'POST',
+          body: JSON.stringify({ uuid })
+        });
+
+        currentParticipantUuid = uuid;
+        currentStages = data.stages;
+
+        const p = data.participant;
+        document.getElementById('resultName').textContent = p.nombre;
+        document.getElementById('resultEmpresa').textContent = p.empresa || '-';
+        document.getElementById('resultPuesto').textContent = p.puesto || '-';
+        document.getElementById('resultTelefono').textContent = p.telefono || '-';
+        document.getElementById('resultCiudad').textContent = p.ciudad || '-';
+        document.getElementById('resultProgress').textContent = `${data.completedCount}/5 etapas`;
+
+        // Update stage buttons
+        [2, 4, 5].forEach(s => {
+          const btn = document.querySelector(`.stage-btn[data-stage="${s}"]`);
+          if (data.stages[s] && data.stages[s].completed) {
+            btn.classList.add('completed');
+          } else {
+            btn.classList.remove('completed');
+          }
+        });
+
+        document.getElementById('scanResult').classList.add('active');
+        showToast(`Participante: ${p.nombre}`, 'success');
+      } catch (error) {
+        showToast(error.message || 'Participante no encontrado', 'error');
+      }
+    }
+
+    async function completeStage(stageNumber) {
+      if (!currentParticipantUuid) return;
+      if (currentStages[stageNumber] && currentStages[stageNumber].completed) {
+        showToast('Esta etapa ya está completada', 'warning');
+        return;
+      }
+
+      try {
+        const data = await apiCall('/api/admin/complete-stage', {
+          method: 'POST',
+          body: JSON.stringify({
+            participantUuid: currentParticipantUuid,
+            stageNumber
+          })
+        });
+
+        const btn = document.querySelector(`.stage-btn[data-stage="${stageNumber}"]`);
+        btn.classList.add('completed');
+        currentStages[stageNumber] = { completed: true };
+
+        const completedCount = Object.values(currentStages).filter(s => s.completed).length;
+        document.getElementById('resultProgress').textContent = `${completedCount}/5 etapas`;
+
+        showToast(data.message, 'success');
+      } catch (error) {
+        showToast(error.message || 'Error completando etapa', 'error');
+      }
+    }
+
+    // Participants list
+    async function loadParticipants() {
+      try {
+        const data = await apiCall('/api/admin/participants');
+        allParticipants = data.participants;
+        renderParticipants(allParticipants);
+      } catch (error) {
+        console.error('Error loading participants:', error);
+      }
+    }
+
+    function renderParticipants(list) {
+      const tbody = document.getElementById('participantsBody');
+      tbody.innerHTML = list.map(p => `
+        <tr>
+          <td>${p.nombre}</td>
+          <td>${p.empresa || '-'}</td>
+          <td>${p.ciudad || '-'}</td>
+          <td>${p.completed_stages}/5</td>
+          <td>${new Date(p.created_at).toLocaleDateString('es-MX')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterParticipants() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allParticipants.filter(p =>
+        p.nombre.toLowerCase().includes(query) ||
+        (p.empresa && p.empresa.toLowerCase().includes(query))
+      );
+      renderParticipants(filtered);
+    }
+
+    // Stats
+    async function loadStats() {
+      try {
+        const data = await apiCall('/api/admin/stats');
+        const s = data.stats;
+
+        document.getElementById('statTotal').textContent = s.totalParticipants;
+        document.getElementById('statCompleted').textContent = s.completedAll;
+        document.getElementById('statVouchers').textContent = s.totalVouchers;
+        document.getElementById('statRedeemed').textContent = s.redeemedVouchers;
+
+        const stageNames = { 1: 'Foto IA', 2: 'Ventas', 3: 'Memorama', 4: 'Conferencia', 5: 'Partner' };
+        const stageStatsDiv = document.getElementById('stageStats');
+        stageStatsDiv.innerHTML = '';
+
+        for (let i = 1; i <= 5; i++) {
+          const count = s.stageCompletion.find(sc => sc.stage_number === i);
+          const completed = count ? count.count : 0;
+          const pct = s.totalParticipants > 0 ? Math.round((completed / s.totalParticipants) * 100) : 0;
+
+          stageStatsDiv.innerHTML += `
+            <div style="margin: 8px 0;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                <span>${i}. ${stageNames[i]}</span>
+                <span style="font-weight: 600;">${completed} (${pct}%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="fill" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Voucher verification
+    document.getElementById('verifyVoucherBtn').addEventListener('click', async () => {
+      const code = document.getElementById('voucherCode').value.trim();
+      if (!code) {
+        showToast('Ingresa un código de voucher', 'error');
+        return;
+      }
+
+      try {
+        const data = await apiCall('/api/admin/verify-voucher', {
+          method: 'POST',
+          body: JSON.stringify({ voucherCode: code })
+        });
+
+        const resultDiv = document.getElementById('voucherResult');
+        const contentDiv = document.getElementById('voucherResultContent');
+
+        resultDiv.classList.remove('valid', 'invalid', 'redeemed');
+
+        if (data.alreadyRedeemed) {
+          resultDiv.classList.add('redeemed');
+          contentDiv.innerHTML = `
+            <h3 style="color: var(--warning);">⚠️ Ya Canjeado</h3>
+            <p><strong>${data.voucher.nombre}</strong> - ${data.voucher.empresa}</p>
+            <p>Swag: ${data.voucher.swag_item}</p>
+            <p style="font-size: 0.8rem; color: var(--gray);">Canjeado el ${new Date(data.voucher.redeemed_at).toLocaleString('es-MX')}</p>
+          `;
+        } else {
+          resultDiv.classList.add('valid');
+          contentDiv.innerHTML = `
+            <h3 style="color: var(--success);">✓ Voucher Válido y Canjeado</h3>
+            <p><strong>${data.voucher.nombre}</strong> - ${data.voucher.empresa}</p>
+            <p>Swag: ${data.voucher.swag_item}</p>
+          `;
+          showToast('Voucher canjeado exitosamente', 'success');
+        }
+
+        resultDiv.classList.add('active');
+      } catch (error) {
+        const resultDiv = document.getElementById('voucherResult');
+        resultDiv.classList.remove('valid', 'redeemed');
+        resultDiv.classList.add('invalid', 'active');
+        document.getElementById('voucherResultContent').innerHTML = `
+          <h3 style="color: var(--danger);">✗ Voucher No Encontrado</h3>
+          <p>El código ingresado no es válido</p>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

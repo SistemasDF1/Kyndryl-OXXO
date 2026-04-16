@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mi Pasaporte - Kyndryl Rally</title>
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/passport.css">
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="passportCard">
+      <!-- Header -->
+      <div class="passport-header">
+        <img src="/kyndryl/kyndryl-logo.png" alt="Kyndryl" class="logo">
+        <h1>Mi Pasaporte</h1>
+        <div class="participant-name" id="participantName">---</div>
+        <div class="participant-empresa" id="participantEmpresa"></div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-text">
+          Progreso: <strong><span id="completedCount">0</span>/5</strong> etapas
+        </div>
+        <div class="progress-bar">
+          <div class="fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Stages -->
+      <div class="stages-grid" id="stagesGrid">
+        <!-- Stage 1 -->
+        <div class="stage-card" id="stage-1">
+          <div class="stage-number">📸</div>
+          <div class="stage-info">
+            <h3>1. Foto con IA</h3>
+            <p>Genera tu foto con IA y compártela en LinkedIn</p>
+          </div>
+          <div class="stage-action">
+            <div class="stamp-placeholder">?</div>
+            <div class="stamp-check" style="display:none">✓</div>
+            <a href="/stage1-foto.html" class="btn btn-primary go-btn">Ir</a>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="stage-card" id="stage-2">
+          <div class="stage-number">🤝</div>
+          <div class="stage-info">
+            <h3>2. Sesión con Ventas</h3>
+            <p>Visita al equipo de ventas</p>
+          </div>
+          <div class="stage-action">
+            <div class="stamp-placeholder">?</div>
+            <div class="stamp-check" style="display:none">✓</div>
+            <div class="qr-hint">Muestra tu QR</div>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="stage-card" id="stage-3">
+          <div class="stage-number">🧩</div>
+          <div class="stage-info">
+            <h3>3. Memorama</h3>
+            <p>Completa el memorama de asociación</p>
+          </div>
+          <div class="stage-action">
+            <div class="stamp-placeholder">?</div>
+            <div class="stamp-check" style="display:none">✓</div>
+            <a href="/stage3-memorama.html" class="btn btn-primary go-btn">Ir</a>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="stage-card" id="stage-4">
+          <div class="stage-number">🎤</div>
+          <div class="stage-info">
+            <h3>4. Conferencia</h3>
+            <p>Asiste a una conferencia del evento</p>
+          </div>
+          <div class="stage-action">
+            <div class="stamp-placeholder">?</div>
+            <div class="stamp-check" style="display:none">✓</div>
+            <div class="qr-hint">Muestra tu QR</div>
+          </div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="stage-card" id="stage-5">
+          <div class="stage-number">🏢</div>
+          <div class="stage-info">
+            <h3>5. Interacción Partner</h3>
+            <p>Interactúa con un partner del stand</p>
+          </div>
+          <div class="stage-action">
+            <div class="stamp-placeholder">?</div>
+            <div class="stamp-check" style="display:none">✓</div>
+            <div class="qr-hint">Muestra tu QR</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Swag CTA -->
+      <div class="swag-cta" id="swagCta">
+        <h3>🎉 ¡Rally Completado!</h3>
+        <p>Has completado todas las etapas. Reclama tu premio.</p>
+        <a href="/swag.html" class="btn btn-primary">Reclamar Swag</a>
+      </div>
+
+      <!-- My QR -->
+      <div class="my-qr-section">
+        <button class="my-qr-btn" id="showQrBtn">
+          <span>📱</span> Mi QR del Rally
+        </button>
+      </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div class="qr-modal" id="qrModal">
+      <div class="qr-modal-content">
+        <h3 id="qrModalName">Tu QR</h3>
+        <p>Muéstralo al staff para validar etapas</p>
+        <img id="qrModalImage" src="" alt="QR Code">
+        <br>
+        <button class="close-modal" id="closeQrModal">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Cargando pasaporte...</p>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Check registration
+    let uuid = getParticipantUuid();
+
+    // Also check URL param (in case accessed via QR scan)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId = urlParams.get('id');
+    if (urlId && !uuid) {
+      setParticipantUuid(urlId);
+      uuid = urlId;
+    }
+
+    if (!uuid) {
+      window.location.href = '/index.html';
+    }
+
+    // Load passport data
+    async function loadPassport() {
+      try {
+        const data = await apiCall(`/api/participants/${uuid}/passport`);
+
+        // Update header
+        document.getElementById('participantName').textContent = data.participant.nombre;
+        document.getElementById('participantEmpresa').textContent = data.participant.empresa || '';
+        document.getElementById('qrModalName').textContent = data.participant.nombre;
+
+        // Update progress
+        document.getElementById('completedCount').textContent = data.completedCount;
+        document.getElementById('progressFill').style.width = `${(data.completedCount / 5) * 100}%`;
+
+        // Update stages
+        for (let i = 1; i <= 5; i++) {
+          const stageCard = document.getElementById(`stage-${i}`);
+          if (data.stages[i] && data.stages[i].completed) {
+            stageCard.classList.add('completed');
+            stageCard.querySelector('.stamp-check').style.display = 'flex';
+            stageCard.querySelector('.stamp-placeholder').style.display = 'none';
+          }
+        }
+
+        // Show swag CTA if all complete
+        if (data.canRedeemSwag) {
+          document.getElementById('swagCta').classList.add('visible');
+        }
+
+        // Store QR
+        if (data.qrCode) {
+          document.getElementById('qrModalImage').src = data.qrCode;
+        }
+
+      } catch (error) {
+        showToast('Error cargando pasaporte', 'error');
+        console.error(error);
+      }
+    }
+
+    // QR Modal
+    document.getElementById('showQrBtn').addEventListener('click', () => {
+      document.getElementById('qrModal').classList.add('active');
+    });
+
+    document.getElementById('closeQrModal').addEventListener('click', () => {
+      document.getElementById('qrModal').classList.remove('active');
+    });
+
+    document.getElementById('qrModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('qrModal').classList.remove('active');
+      }
+    });
+
+    // Auto-refresh every 15 seconds to catch staff validations
+    loadPassport();
+    setInterval(loadPassport, 15000);
+  </script>
+</body>
+</html>

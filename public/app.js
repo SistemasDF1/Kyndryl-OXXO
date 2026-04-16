@@ -35,11 +35,6 @@ cameraBtn.addEventListener('click', async () => {
 });
 captureBtn.addEventListener('click', captureImage);
 closeCameraBtn.addEventListener('click', closeCamera);
-removeBtn.addEventListener('click', () => {
-    imagePreview.src = '';
-    previewContainer.style.display = 'none';
-    checkFormValid();
-});
 
 // Botones de ejemplo
 exampleBtns.forEach(btn => {
@@ -127,6 +122,7 @@ async function generateImage() {
         });
 
         const data = await response.json();
+        console.log('Respuesta del servidor:', data);
 
         if (!response.ok) {
             throw new Error(data.error || 'Error al generar la imagen');
@@ -136,6 +132,15 @@ async function generateImage() {
         resultSection.style.display = 'block';
         resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         showToast('¡Imagen generada exitosamente! 🎉', 'success');
+        
+        // Mostrar QR con URL de descarga
+        console.log('QR recibido:', !!data.qrCode);
+        if (data.qrCode) {
+            console.log('Mostrando QR...');
+            showQRCode(data.qrCode);
+        } else {
+            console.log('No se recibió QR del servidor');
+        }
     } catch (error) {
         console.error('Error:', error);
         showToast(error.message || 'Error al generar la imagen', 'error');
@@ -171,6 +176,10 @@ function resetForm() {
     previewContainer.style.display = 'none';
     resultSection.style.display = 'none';
     generateBtn.disabled = true;
+    
+    // Limpiar QR
+    const qrContainer = document.getElementById('qr-container');
+    if (qrContainer) qrContainer.innerHTML = '';
     
     // Scroll al inicio
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -256,6 +265,31 @@ function abrirCamara() {
 function continuarFoto() {
     document.getElementById('skinSelectionContainer').style.display = 'none';
     document.getElementById('generatorContainer').style.display = 'block';
+}
+
+// Función para mostrar QR de descarga
+function showQRCode(qrCodeDataUrl) {
+    const qrContainer = document.getElementById('qr-container');
+    if (!qrContainer) return;
+    
+    qrContainer.innerHTML = '';
+    
+    // Crear título
+    const title = document.createElement('h3');
+    title.textContent = 'Escanea para descargar';
+    title.style.color = '#666';
+    title.style.fontSize = '1.1rem';
+    title.style.marginBottom = '10px';
+    qrContainer.appendChild(title);
+    
+    // Mostrar QR generado por el servidor
+    const qrImg = document.createElement('img');
+    qrImg.src = qrCodeDataUrl;
+    qrImg.style.width = '150px';
+    qrImg.style.height = '150px';
+    qrImg.style.border = '2px solid #ddd';
+    qrImg.style.borderRadius = '10px';
+    qrContainer.appendChild(qrImg);
 }
 
 // Ejecutar al cargar la página

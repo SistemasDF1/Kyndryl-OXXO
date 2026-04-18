@@ -109,11 +109,7 @@
 
     // ── Prompt ──
     function buildPrompt() {
-      return `Se te proporcionan DOS imágenes de referencia:
-1) La PRIMERA imagen es la foto real de la persona: usa su rostro, piel, cabello y rasgos faciales EXACTAMENTE iguales, sin modificarlos.
-2) La SEGUNDA imagen es la playera oficial de empleado de OXXO que debes vestirle a la persona: cópiala con fidelidad total — color rojo idéntico, cuello amarillo, puños amarillos, logo OXXO en el pecho, cierre frontal vertical y bolsillos delanteros tal como aparecen en la referencia.
-
-Genera un retrato fotorrealista donde la persona de la PRIMERA imagen aparece vistiendo EXACTAMENTE la playera de la SEGUNDA imagen. La playera debe verse limpia, planchada y bien ajustada. La persona debe aparecer sonriendo amigablemente, con actitud de empleado de tienda de conveniencia atendiendo al cliente. El fondo debe mostrar el interior luminoso de una tienda OXXO con estantes llenos de productos, refrigeradores con bebidas e iluminación fluorescente brillante. Iluminación cálida y natural. Estilo fotorrealista, profesional y cotidiano. NO agregues ningún texto, nombre, ni letras superpuestas en la imagen; el resultado debe ser solo la fotografía limpia sin tipografía añadida.`;
+      return `Create a photorealistic image that combines three reference images. The subject is the person from the FIRST image (the selfie): preserve their exact facial features, skin tone, hair, body proportions, and any accessories such as glasses. Dress this person in the EXACT outfit shown in the THIRD image: replicate every detail — colors, logos, textures, patterns, and fit — without any alteration. Place the dressed person inside the environment shown in the SECOND image, seamlessly integrated with natural lighting and shadows that match that scene. The person must be fully visible in a natural, upright standing pose. The background must remain exactly as in the second image; do not change any element of it. The final result must look like a professional, high-quality photograph taken on location. Do not change the person's face, identity, or any physical characteristic.`;
     }
 
     // ── Camera ──
@@ -203,7 +199,7 @@ Genera un retrato fotorrealista donde la persona de la PRIMERA imagen aparece vi
       formData.append('image', capturedFile);
       formData.append('prompt', buildPrompt());
       formData.append('participantUuid', '');
-      formData.append('plecaVersion', 'oxxo');
+      formData.append('plecaVersion', 'promt');
 
       try {
         const response = await fetch('/api/generate', { method: 'POST', body: formData });

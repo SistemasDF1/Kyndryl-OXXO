@@ -141,7 +141,7 @@ router.post('/', upload.single('image'), async (req, res) => {
 
     // If OXXO flow, attach shirt reference image so the model copies it accurately
     if (plecaVersion === 'oxxo') {
-      const shirtPath = path.join(ROOT_DIR, 'public', 'img', 'playera_oxxo.png');
+      const shirtPath = path.join(ROOT_DIR, 'public', 'img', 'OXXO-PRUEBA.png');
       if (fs.existsSync(shirtPath)) {
         const shirtData = fs.readFileSync(shirtPath).toString('base64');
         parts.push({
@@ -153,6 +153,38 @@ router.post('/', upload.single('image'), async (req, res) => {
         console.log('Referencia de playera OXXO adjuntada');
       } else {
         console.warn('playera_oxxo.png no encontrada en public/img/');
+      }
+    }
+
+    // If PROMT flow, attach background and clothing reference images from PROMT folder
+    if (plecaVersion === 'promt') {
+      const fondoPath = path.join(ROOT_DIR, 'public', 'img', 'PROMT', 'fondo.jpg');
+      const ropaPath = path.join(ROOT_DIR, 'public', 'img', 'PROMT', 'ropa.png');
+
+      if (fs.existsSync(fondoPath)) {
+        const fondoData = fs.readFileSync(fondoPath).toString('base64');
+        parts.push({
+          inlineData: {
+            mimeType: 'image/jpeg',
+            data: fondoData
+          }
+        });
+        console.log('Fondo PROMT adjuntado');
+      } else {
+        console.warn('fondo.jpg no encontrado en PROMT/');
+      }
+
+      if (fs.existsSync(ropaPath)) {
+        const ropaData = fs.readFileSync(ropaPath).toString('base64');
+        parts.push({
+          inlineData: {
+            mimeType: 'image/png',
+            data: ropaData
+          }
+        });
+        console.log('Ropa PROMT adjuntada');
+      } else {
+        console.warn('ropa.png no encontrada en PROMT/');
       }
     }
 

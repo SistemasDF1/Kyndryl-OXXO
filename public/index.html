@@ -34,6 +34,13 @@
       </div>
 
       <!-- Generate -->
+      <!-- Términos y Condiciones -->
+      <div class="terms-section" style="margin: 20px 0; text-align: left;">
+        <input type="checkbox" id="termsCheckbox">
+        <label for="termsCheckbox">
+          Acepto los <a href="#" id="showTermsLink">Términos y Condiciones</a>
+        </label>
+      </div>
       <div class="generate-section">
         <button class="btn btn-primary btn-full btn-lg" id="generateBtn" disabled>
           Generar Mi Foto
@@ -75,6 +82,26 @@
     <div class="loading-overlay" id="loadingOverlay">
       <div class="spinner"></div>
       <p>Generando tu foto...</p>
+    </div>
+    <!-- Modal de Términos y Condiciones -->
+    <div id="termsModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+      <div style="background:#fff; max-width:600px; margin:40px auto; padding:32px 24px; border-radius:12px; box-shadow:0 2px 16px #0003; position:relative;">
+        <button id="closeTermsModal" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:1.5em; cursor:pointer;">&times;</button>
+        <h2 style="margin-top:0;">Términos y Condiciones</h2>
+        <ol style="padding-left: 18px;">
+          <li><b>Consentimiento para Fotografía y Procesamiento con IA</b><br>
+          Usted autoriza que se le tome una fotografía y entiende que la misma será procesada y alterada creativamente por un modelo de inteligencia artificial generativa. Los resultados se generan de manera automática y tienen fines recreativos y demostrativos.</li>
+          <li><b>Uso de Imágenes, Nombres o Logos de Terceros (Descargo de Responsabilidad de Afiliación)</b><br>
+          Las imágenes generadas pueden incluir, de forma automática, nombres, logos o referencias a marcas y organizaciones de terceros.<br>
+          Esto se realiza únicamente con fines de demostración y entretenimiento.<br>
+          Esta experiencia no tiene fines comerciales, no genera ingresos y no implica afiliación, patrocinio o respaldo por parte de dichas marcas.<br>
+          Todas las marcas comerciales mencionadas o representadas pertenecen a sus respectivos propietarios.</li>
+          <li><b>Exhibición Pública</b><br>
+          Las fotografías originales y/o generadas con IA que incluyan su imagen podrán ser exhibidas en pantallas, monitores o dispositivos visibles dentro del espacio donde se realiza la actividad, durante la duración de la misma.</li>
+          <li><b>Aceptación de Términos</b><br>
+          Si usted no está de acuerdo con estos Términos y Condiciones, por favor absténgase de participar en esta experiencia fotográfica.</li>
+        </ol>
+      </div>
     </div>
   </div>
 
@@ -186,8 +213,21 @@
     });
 
     function checkCanGenerate() {
-      document.getElementById('generateBtn').disabled = !capturedFile;
+      const termsAccepted = document.getElementById('termsCheckbox').checked;
+      document.getElementById('generateBtn').disabled = !(capturedFile && termsAccepted);
     }
+
+    // Habilitar botón solo si se acepta términos
+    document.getElementById('termsCheckbox').addEventListener('change', checkCanGenerate);
+
+    // Mostrar modal de términos
+    document.getElementById('showTermsLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('termsModal').style.display = 'flex';
+    });
+    document.getElementById('closeTermsModal').addEventListener('click', function() {
+      document.getElementById('termsModal').style.display = 'none';
+    });
 
     // ── Generate ──
     document.getElementById('generateBtn').addEventListener('click', async () => {

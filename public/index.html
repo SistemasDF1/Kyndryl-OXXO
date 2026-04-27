@@ -136,7 +136,15 @@
 
     // ── Prompt ──
     function buildPrompt() {
-      return `Create a photorealistic image that combines three reference images. The subject is the person from the FIRST image (the selfie): preserve their exact facial features, skin tone, hair, body proportions, and any accessories such as glasses. Dress this person in the EXACT outfit shown in the THIRD image: replicate every detail — colors, logos, textures, patterns, and fit — without any alteration. Place the dressed person inside the environment shown in the SECOND image, seamlessly integrated with natural lighting and shadows that match that scene. The person must be fully visible in a natural, upright standing pose. The background must remain exactly as in the second image; do not change any element of it. The final result must look like a professional, high-quality photograph taken on location. Do not change the person's face, identity, or any physical characteristic.`;
+      return `Genera una imagen de la persona de la PRIMERA imagen (selfie) vistiendo el uniforme OXXO de la SEGUNDA imagen.
+
+FONDO OBLIGATORIO: usa ÚNICAMENTE color verde sólido puro #00FF00 como fondo. Sin escenarios, sin decorados, sin degradados, sin texturas. Solo la persona sobre verde puro uniforme.
+
+PERSONA (PRIMERA imagen): reproduce EXACTAMENTE su cara, rasgos faciales, tono de piel y cabello. Plano medio (de cintura para arriba). De pie, sonriendo, mirando directamente a cámara.
+
+UNIFORME (SEGUNDA imagen): gorra de béisbol roja con logo OXXO, overol de manga larga con pecho rojo, franja gris reflectante, parche OXXO, mangas azul marino con gris en antebrazos. Ajusta el uniforme a la complexión de la persona.
+
+Resultado: fotografía comercial profesional, iluminación frontal neutra, sin sombras en el fondo verde.`;
     }
 
     // ── Camera ──
